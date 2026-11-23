@@ -12,13 +12,16 @@ on:
       - ".github/workflows/ios-build.yml"
 
 jobs:
-  swift-check:
+  swift-core-tests:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - name: Show Swift version
         run: swift --version
-      - name: Validate Swift source syntax
+      - name: Run core package tests
+        working-directory: ZedSecure-iOS
+        run: swift test
+      - name: Parse iOS scaffold sources
         run: |
-          find ZedSecure-iOS -name '*.swift' -print0 |
+          find ZedSecure-iOS/App ZedSecure-iOS/UI ZedSecure-iOS/Tunnel ZedSecure-iOS/Core -name '*.swift' -print0 |
             xargs -0 -n1 swiftc -frontend -parse
