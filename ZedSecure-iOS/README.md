@@ -1,17 +1,28 @@
-# ZedSecure iOS Foundation
+# ZedSecure iOS Port
 
-Native SwiftUI foundation for an iOS port of ZedSecure.
+This directory contains the native iOS port foundation. The Swift Package covers
+a platform-neutral configuration model and a deliberately limited URI-authority
+parser. It does **not** provide a working VPN connection.
 
-## Current scope
-- SwiftUI app shell and dashboard
-- Server/configuration model and basic URI parsing
-- Network Extension Packet Tunnel provider scaffold
-- iOS build workflow scaffold
+## Run core tests
 
-## Important limitations
-This is not yet a feature-complete VPN port. The Android app's native engine integration (including the bundled `zedcore.aar`) cannot be reused on iOS. A compatible iOS engine and its licensing/build integration must be selected and implemented separately.
+On a Mac with Xcode Command Line Tools:
 
-A working packet-tunnel VPN also requires Apple's Network Extension entitlement and valid provisioning. A free Apple ID does not guarantee that entitlement.
+```sh
+cd ZedSecure-iOS
+swift test
+```
 
-## Build
-Open `ZedSecure-iOS.xcodeproj` in Xcode on macOS, configure the app and packet-tunnel targets with matching bundle identifiers and signing, then build for a physical iPhone. The project file and signing configuration still need to be completed in Xcode.
+## Implementation status
+
+- Swift configuration model and protocol-scheme aliases: implemented.
+- Basic endpoint URI parsing and unit tests: implemented.
+- VMess JSON/base64 and Shadowsocks encoded-link decoding: not implemented.
+- SwiftUI app shell and Packet Tunnel Provider: scaffold only.
+- sing-box, Xray, WireGuard/AmneziaWG engine integration: not implemented.
+- Network Extension entitlement, provisioning, and signed IPA: not configured.
+
+The Android AAR/JNI libraries cannot be linked directly into an iOS app. Engine
+integration requires iOS-compatible binaries and a real Network Extension
+Packet Tunnel target. A free Apple ID or sideloading tool does not grant the
+Network Extension entitlement needed for a functional VPN tunnel.
