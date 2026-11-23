@@ -3,50 +3,49 @@ import XCTest
 
 final class ConfigurationParserTests: XCTestCase {
     func testParsesVLESSAuthorityAndCredentials() throws {
-        let config = try ConfigurationParser.parseAuthority(
-            from: "vless://user:pass@example.com:443?security=tls#Primary"
-        )
-
-        XCTAssertEqual(config.protocolType, .vless)
-        XCTAssertEqual(config.host, "example.com")
-        XCTAssertEqual(config.port, 443)
-        XCTAssertEqual(config.username, "user")
-        XCTAssertEqual(config.password, "pass")
-        XCTAssertEqual(config.name, "Primary")
+        let c = try ConfigurationParser.parse(from: "vless://user:pass@example.com:443?security=tls#Primary")
+        XCTAssertEqual(c.protocolType, .vless); XCTAssertEqual(c.host, "example.com")
+        XCTAssertEqual(c.port, 443); XCTAssertEqual(c.username, "user")
+        XCTAssertEqual(c.password, "pass"); XCTAssertEqual(c.name, "Primary")
     }
 
-    func testParsesIPv6Host() throws {
-        let config = try ConfigurationParser.parseAuthority(
-            from: "trojan://secret@[2001:db8::1]:8443#IPv6"
-        )
-
-        XCTAssertEqual(config.host, "2001:db8::1")
-        XCTAssertEqual(config.port, 8443)
-        XCTAssertEqual(config.password, "secret")
+    func testParsesIPv6Trojan() throws {
+        let c = try ConfigurationParser.parse(from: "trojan://secret@[2001:db8::1]:8443#IPv6")
+        XCTAssertEqual(c.host, "2001:db8::1"); XCTAssertEqual(c.port, 8443)
+        XCTAssertEqual(c.password, "secret")
     }
 
-    func testMapsProtocolAliases() throws {
-        let config = try ConfigurationParser.parseAuthority(
-            from: "wg://peer@example.org:51820"
-        )
+    func testMapsWireGuardAlias() throws {
+        let c = try ConfigurationParser.parse(from: "wg://peer@example.org:51820")
+        XCTAssertEqual(c.protocolType, .wireGuard); XCTAssertEqual(c.port, 51820)
+    }
 
-        XCTAssertEqual(config.protocolType, .wireGuard)
-        XCTAssertEqual(config.port, 51820)
+    func testParsesVMessBase64JSON() throws {
+        let json = #"{"v":"2","ps":"Office","add":"vm.example.net","port":"443","id":"123e4567-e89b-12d3-a456-426614174000","aid":"0","net":"ws"}"#
+        let encoded = Data(json.utf8).base64EncodedString()
+        let c = try ConfigurationParser.parse(from: "vmess://\(encoded)")
+        XCTAssertEqual(c.protocolType, .vmess); XCTAssertEqual(c.host, "vm.example.net")
+        XCTAssertEqual(c.port, 443); XCTAssertEqual(c.username, "123e4567-e89b-12d3-a456-426614174000")
+        XCTAssertEqual(c.name, "Office")
+    }
+
+    func testParsesShadowsocksBase64Payload() throws {
+        let encoded = Data("aes-128-gcm:secret@ss.example.net:8388".utf8).base64EncodedString()
+        let c = try ConfigurationParser.parse(from: "ss://\(encoded)#Home")
+        XCTAssertEqual(c.protocolType, .shadowsocks); XCTAssertEqual(c.host, "ss.example.net")
+        XCTAssertEqual(c.port, 8388); XCTAssertEqual(c.username, "aes-128-gcm")
+        XCTAssertEqual(c.password, "secret"); XCTAssertEqual(c.name, "Home")
     }
 
     func testRejectsUnsupportedScheme() {
-        XCTAssertThrowsError(
-            try ConfigurationParser.parseAuthority(from: "ftp://example.com:21")
-        ) { error in
-            XCTAssertEqual(error as? ConfigurationParserError, .unsupportedScheme("ftp"))
+        XCTAssertThrowsError(try ConfigurationParser.parse(from: "ftp://example.com:21")) {
+            XCTAssertEqual($0 as? ConfigurationParserError, .unsupportedScheme("ftp"))
         }
     }
 
-    func testRejectsEncodedVmessUntilDedicatedDecoderExists() {
-        XCTAssertThrowsError(
-            try ConfigurationParser.parseAuthority(from: "vmess://eyJhZGQiOiJleGFtcGxlLmNvbSJ9")
-        ) { error in
-            XCTAssertEqual(error as? ConfigurationParserError, .encodedProfileNotSupported)
+    func testRejectsMalformedVmessPayload() {
+        XCTAssertThrowsError(try ConfigurationParser.parse(from: "vmess://not-valid-json")) {
+            XCTAssertEqual($0 as? ConfigurationParserError, .invalidEncodedProfile)
         }
     }
 }
