@@ -1,0 +1,24 @@
+name: iOS Foundation Checks
+
+on:
+  push:
+    branches: [main, ios-sideload-foundation]
+    paths:
+      - "ZedSecure-iOS/**"
+      - ".github/workflows/ios-build.yml"
+  pull_request:
+    paths:
+      - "ZedSecure-iOS/**"
+      - ".github/workflows/ios-build.yml"
+
+jobs:
+  swift-check:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show Swift version
+        run: swift --version
+      - name: Validate Swift source syntax
+        run: |
+          find ZedSecure-iOS -name '*.swift' -print0 |
+            xargs -0 -n1 swiftc -frontend -parse
