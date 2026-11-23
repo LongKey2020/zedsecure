@@ -1,28 +1,30 @@
 # ZedSecure iOS Port
 
-This directory contains the native iOS port foundation. The Swift Package covers
-a platform-neutral configuration model and a deliberately limited URI-authority
-parser. It does **not** provide a working VPN connection.
+Native Swift iOS port foundation for the Android/desktop ZedSecure project.
 
 ## Run core tests
-
-On a Mac with Xcode Command Line Tools:
+On macOS with Xcode Command Line Tools or Swift installed:
 
 ```sh
 cd ZedSecure-iOS
 swift test
 ```
 
-## Implementation status
+## Implemented and tested
+- Normalized Swift server model and protocol URI aliases.
+- VLESS-style authority parsing, Trojan password parsing, IPv6 host normalization.
+- VMess base64 JSON endpoint/UUID/name extraction.
+- Shadowsocks base64 payload extraction.
+- XCTest coverage for the above cases.
 
-- Swift configuration model and protocol-scheme aliases: implemented.
-- Basic endpoint URI parsing and unit tests: implemented.
-- VMess JSON/base64 and Shadowsocks encoded-link decoding: not implemented.
-- SwiftUI app shell and Packet Tunnel Provider: scaffold only.
-- sing-box, Xray, WireGuard/AmneziaWG engine integration: not implemented.
-- Network Extension entitlement, provisioning, and signed IPA: not configured.
+## Not yet implemented
+- Full transport/TLS/REALITY query decoding and engine-specific config generation.
+- All Shadowsocks SIP002 variants (including plugin options and every URL-safe form).
+- Subscription formats, QR scanning, profile persistence and server management UI.
+- sing-box, Xray, WireGuard/AmneziaWG iOS engine integration.
+- Network Extension Packet Tunnel target, entitlement, provisioning, signing and IPA.
 
-The Android AAR/JNI libraries cannot be linked directly into an iOS app. Engine
-integration requires iOS-compatible binaries and a real Network Extension
-Packet Tunnel target. A free Apple ID or sideloading tool does not grant the
-Network Extension entitlement needed for a functional VPN tunnel.
+Android AAR/JNI binaries cannot be linked directly into iOS. A functional VPN
+requires iOS-compatible engine binaries plus the Apple Network Extension
+capability and a correctly provisioned Packet Tunnel extension. Free Apple ID
+sideloading does not itself grant that entitlement.
